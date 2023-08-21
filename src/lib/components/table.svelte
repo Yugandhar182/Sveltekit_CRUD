@@ -2,6 +2,7 @@
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
   import { Button, Modal } from 'flowbite-svelte';
   import { Input, Label, Helper, Checkbox, A } from 'flowbite-svelte';
+ 
 
   // Define the selectedCandidate for editing
 export  let selectedCandidate = null;
@@ -16,15 +17,14 @@ let isPopupOpen = false;
   function openEditPopup(candidate) {
   selectedCandidate = candidate;
   isPopupOpen = true;
-}
-async function editCandidate(updatedCandidate) {
+}async function editCandidate(updatedCandidate) {
 // Find the index of the selectedCandidate in the candidates array
 const index = candidates.findIndex(candidate => candidate.id === updatedCandidate.id);
 if (index !== -1) {
   candidates[index] = updatedCandidate;
 
   // Make an API call to update the server
-  const response = await fetch(`https://api.recruitly.io/api/candidate/${updatedCandidate.id}/?apiKey=TEST1236C4CF23E6921C41429A6E1D546AC9535E`, {
+  const response = await fetch(`https://api.recruitly.io/api/candidate?apiKey=TEST1236C4CF23E6921C41429A6E1D546AC9535E`, {
     method: 'POST', // Use PUT method to update existing data
     headers: {
       'Content-Type': 'application/json'
@@ -43,7 +43,6 @@ if (index !== -1) {
 }
 isPopupOpen = false; // Close the popup after editing
 }
-
 
 
 // Function to open the delete confirmation modal
@@ -75,6 +74,37 @@ async function deleteCandidate(candidate) {
     }
   }
 }
+
+export  let isAddModalOpen = false;
+let newCandidate = {
+firstName: '',
+surname: '',
+mobile: '',
+email: ''
+};
+
+async function addCandidate() {
+// Make an API call to add the new candidate
+const response = await fetch(`https://api.recruitly.io/api/candidate?apiKey=TEST1236C4CF23E6921C41429A6E1D546AC9535E`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(newCandidate)
+  // Add any necessary authentication headers or tokens
+});
+
+if (response.ok) {
+  // Candidate added successfully on the server
+  console.log("Candidate added successfully!");
+  candidates.push(newCandidate); // Add the new candidate to the candidates array
+  isAddModalOpen = false; // Close the modal after adding
+} else {
+  // Handle error if addition on server failed
+  console.error('Failed to add candidate on the server');
+}
+}
+
 </script>
 
 <main>
@@ -86,6 +116,9 @@ async function deleteCandidate(candidate) {
         <TableHeadCell>Mobile</TableHeadCell>
         <TableHeadCell>Email</TableHeadCell>
         <TableHeadCell>Action</TableHeadCell>
+        <Button color="yellow" on:click={() => isAddModalOpen = true}>Add</Button>
+
+        
       </TableHead>
       <TableBody class="divide-y">
         {#each candidates as candidate}
@@ -96,9 +129,9 @@ async function deleteCandidate(candidate) {
             <TableBodyCell>{candidate.mobile}</TableBodyCell>
             <TableBodyCell>{candidate.email}</TableBodyCell>
             <TableBodyCell>
-              <button on:click={() => openEditPopup(candidate)}>Edit</button>
+              <Button color="blue" on:click={() => openEditPopup(candidate)}>Edit</Button >
 
-              <button on:click={() => deleteCandidate(candidate)}>Delete</button>
+              <Button  color="blue" on:click={() => deleteCandidate(candidate)}>Delete</Button >
             </TableBodyCell>
           </TableBodyRow>
         {/each}
@@ -140,17 +173,40 @@ async function deleteCandidate(candidate) {
   {/if}
 
 
+
+  {#if isAddModalOpen}
+<div class="popup-background">
+<div class="popup-content" style="width: 400px; height: 400px; margin-left: 100px; margin-top:-100px" >
+  <form>
+  
+    <Label for="new_first_name" class="mb-2">First name</Label>
+    <Input type="text" id="new_first_name" bind:value={newCandidate.firstName}/>
+    <div>
+      <Label for="last_name" class="mb-2">Surnname</Label>
+      <Input type="text" id="last_name"  bind:value={newCandidate.surname}/>
+    </div>
+    <div>
+      <Label for="phone" class="mb-2">Mobile</Label>
+    <Input type="tel" id="phone" bind:value={newCandidate.mobile} />
+    </div>
+    <div>
+      <Label for="email" class="mb-2">Email</Label>
+      <Input type="email" id="email" bind:value={newCandidate.email}/>
+    </div>
+    
+    <div class="popup-buttons">
+      <Button on:click={addCandidate}>Add</Button>
+      <Button on:click={() => isAddModalOpen = false} color="alternative">Cancel</Button>
+    </div>
+  </form>
+</div>
+</div>
+{/if}
+
 </main>
 
 <style>
-  /* Style for the modal */
-  .modal {
-    /* Add styles for positioning the modal */
-  }
-
-  .modal-content {
-    /* Add styles for the modal content */
-  }
+ 
   .popup-background {
   position: fixed;
   top: 0;
